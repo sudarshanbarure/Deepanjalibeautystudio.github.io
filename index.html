@@ -1051,9 +1051,14 @@
 <a href="https://wa.me/919284368601?text=Hi!%20I'd%20like%20to%20book%20an%20appointment%20at%20Deepanjali%20Hair%20and%20Makeup%20Artist." target="_blank" class="wa-float" title="Chat on WhatsApp">💬</a>
 
 <script>
-// =============================
+// ===============================
+// GOOGLE APPS SCRIPT WEB APP URL
+// ===============================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm122YHJb8dHmXMq0VVSUCrvlWjRdqAEjTxujcFXWEkI0aNN1VLVN4qB3v1I4hTQyX/exec';
+
+// ===============================
 // CUSTOM CURSOR
-// =============================
+// ===============================
 const cursor = document.getElementById('cursor');
 const ring = document.getElementById('cursorRing');
 
@@ -1083,6 +1088,7 @@ if (cursor && ring) {
       ring.style.width = '52px';
       ring.style.height = '52px';
     });
+
     el.addEventListener('mouseleave', () => {
       cursor.style.width = '10px';
       cursor.style.height = '10px';
@@ -1092,10 +1098,11 @@ if (cursor && ring) {
   });
 }
 
-// =============================
+// ===============================
 // SCROLL REVEAL
-// =============================
+// ===============================
 const reveals = document.querySelectorAll('.reveal');
+
 const observer = new IntersectionObserver((entries) => {
   entries.forEach((e, i) => {
     if (e.isIntersecting) {
@@ -1103,46 +1110,44 @@ const observer = new IntersectionObserver((entries) => {
       observer.unobserve(e.target);
     }
   });
-}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+}, {
+  threshold: 0.1,
+  rootMargin: '0px 0px -40px 0px'
+});
 
 reveals.forEach(el => observer.observe(el));
 
-// =============================
-// GOOGLE APPS SCRIPT URL
-// =============================
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyA8YFVofpU29Swzy7j90ckDPTyEd9rrshJQnQJDaIQCylKNsLMBwTNh6a-R8eKg2bW/exec';
-
-// =============================
+// ===============================
 // FORM SUBMIT FUNCTION
-// =============================
+// ===============================
 async function submitForm() {
-  const name = document.getElementById('fname')?.value.trim() || '';
-  const phone = document.getElementById('fphone')?.value.trim() || '';
-  const email = document.getElementById('femail')?.value.trim() || '';
-  const service = document.getElementById('fservice')?.value.trim() || '';
-  const date = document.getElementById('fdate')?.value.trim() || '';
-  const message = document.getElementById('fmessage')?.value.trim() || '';
+  const name = document.getElementById('fname').value.trim();
+  const phone = document.getElementById('fphone').value.trim();
+  const email = document.getElementById('femail').value.trim();
+  const service = document.getElementById('fservice').value.trim();
+  const date = document.getElementById('fdate').value.trim();
+  const message = document.getElementById('fmessage').value.trim();
 
   const successBox = document.getElementById('formSuccess');
   const errorBox = document.getElementById('formError');
   const btn = document.querySelector('.form-submit');
 
-  // Hide old messages
-  if (successBox) successBox.style.display = 'none';
-  if (errorBox) errorBox.style.display = 'none';
+  // Reset messages
+  successBox.style.display = 'none';
+  errorBox.style.display = 'none';
+  errorBox.innerText = '';
 
   // Validation
   if (!name || !phone || !service) {
-    showError('Please fill Name, Phone Number and Service.');
+    errorBox.innerText = '⚠ Please fill Name, Phone Number and Service.';
+    errorBox.style.display = 'block';
     return;
   }
 
-  // Button loading state
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-    btn.style.opacity = '0.7';
-  }
+  // Disable button while sending
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  btn.style.opacity = '0.7';
 
   const payload = {
     name,
@@ -1150,8 +1155,7 @@ async function submitForm() {
     email,
     service,
     date,
-    message,
-    timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+    message
   };
 
   try {
@@ -1159,14 +1163,14 @@ async function submitForm() {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
+        'Content-Type': 'application/json'
       }
     });
 
     const result = await response.json();
 
-    if (result.status === 'ok') {
-      if (successBox) successBox.style.display = 'block';
+    if (result.status === 'success') {
+      successBox.style.display = 'block';
 
       // Clear form
       document.getElementById('fname').value = '';
@@ -1176,46 +1180,33 @@ async function submitForm() {
       document.getElementById('fdate').value = '';
       document.getElementById('fmessage').value = '';
 
-      if (btn) {
-        btn.textContent = '✓ Sent!';
-        btn.style.background = '#4caf50';
-      }
+      btn.textContent = '✓ Sent!';
+      btn.style.background = '#4caf50';
 
-      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = 'Send Query ✦';
+        btn.style.opacity = '1';
+        btn.style.background = '';
+      }, 2500);
+
     } else {
-      showError('Something went wrong: ' + (result.message || 'Unknown error'));
-      resetButton();
+      errorBox.innerText = '⚠ ' + (result.message || 'Something went wrong.');
+      errorBox.style.display = 'block';
+
+      btn.disabled = false;
+      btn.textContent = 'Send Query ✦';
+      btn.style.opacity = '1';
     }
+
   } catch (error) {
-    console.error('Form Error:', error);
-    showError('Failed to send query. Please try again.');
-    resetButton();
-  }
-}
-
-// =============================
-// SHOW ERROR
-// =============================
-function showError(msg) {
-  const errorBox = document.getElementById('formError');
-  if (errorBox) {
-    errorBox.innerText = '⚠ ' + msg;
+    console.error('Form submit error:', error);
+    errorBox.innerText = '⚠ Failed to send query. Please try again.';
     errorBox.style.display = 'block';
-  } else {
-    alert(msg);
-  }
-}
 
-// =============================
-// RESET BUTTON
-// =============================
-function resetButton() {
-  const btn = document.querySelector('.form-submit');
-  if (btn) {
     btn.disabled = false;
     btn.textContent = 'Send Query ✦';
     btn.style.opacity = '1';
-    btn.style.background = '';
   }
 }
 </script>
